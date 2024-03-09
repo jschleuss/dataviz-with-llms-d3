@@ -1,63 +1,55 @@
-d3.csv("../stories-with-embeddings.csv").then(data => {
-    // Parse numeric values and prepare the domain data for coloring
-    data.forEach(d => {
-        d.x = +d.x;
-        d.y = +d.y;
-    });
+// Load CSV file
+d3.csv("stories-with-embeddings.csv").then(data => {
+    const svg = d3.select("#chart").append("svg")
+        .attr("width", 800)
+        .attr("height", 600);
 
-    // SVG dimensions
-    const width = 600, height = 400;
+    // Tooltip
+    const tooltip = d3.select("#chart").append("div")
+        .attr("class", "tooltip");
 
-    // Define scales for positioning
-    const xScale = d3.scaleLinear()
-        .domain([d3.min(data, d => d.x), d3.max(data, d => d.x)])
-        .range([0, width]);
+    // Function to show tooltip
+    function showTooltip(event, d) {
+        tooltip
+            .style("opacity", 1)
+            .html(`Title: ${d.title}<br>Date: ${d.publication_date}<br>Domain: ${d.domain}`)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY + 10) + "px");
+    }
 
-    const yScale = d3.scaleLinear()
-        .domain([d3.min(data, d => d.y), d3.max(data, d => d.y)])
-        .range([height, 0]);
+    // Function to hide tooltip
+    function hideTooltip() {
+        tooltip.style("opacity", 0);
+    }
 
-    // Define an ordinal scale for colors
-    const colorScale = d3.scaleOrdinal()
-        .domain(data.map(d => d.domain)) // Extract the unique domains
-        .range(d3.schemeCategory10); // Use a D3 color scheme
-
-    // Create SVG element
-    const svg = d3.select("#scatterplot").append("svg")
-        .attr("width", width)
-        .attr("height", height);
-
-    // Create tooltip
-    const tooltip = d3.select("body").append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
-
-    // Draw circles with color based on domain
+    // Draw circles
     svg.selectAll("circle")
         .data(data)
         .enter().append("circle")
-        .attr("cx", d => xScale(d.x))
-        .attr("cy", d => yScale(d.y))
-        .attr("r", 5)
-        .style("fill", d => colorScale(d.domain)) // Apply color scale here
-        .on("mouseover", (event, d) => {
-            tooltip.transition()
-                .duration(200)
-                .style("opacity", .9);
-            tooltip.html(`Title: ${d.title}<br/>Publication Date: ${d.publication_date}<br/>Domain: ${d.domain}`)
-                .style("left", (event.pageX) + "px")
-                .style("top", (event.pageY - 28) + "px");
-        })
-        .on("mouseout", () => {
-            tooltip.transition()
-                .duration(500)
-                .style("opacity", 0);
-        });
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y)
+            .attr("r", 5)
+            .style("fill", "steelblue")
+            .on("mouseover", showTooltip)
+            .on("mouseout", hideTooltip);
 
-    // Implement search functionality
-    d3.select("#search-box").on("keyup", function() {
-        const searchTerm = this.value.toLowerCase();
+    // Search functionality
+    d3.select("#searchBox").on("keyup", function(event) {
+        const searchText = event.target.value.toLowerCase();
+        const filteredData = data.filter(d => d.title.toLowerCase().includes(searchText));
+        
         svg.selectAll("circle")
-            .style("display", d => d.title.toLowerCase().indexOf(searchTerm) > -1 ? null : "none");
+            .data(filteredData, d => d.title)
+            .join(
+                enter => enter.append("circle")
+                    .attr("cx", d => d.x)
+                    .attr("cy", d => d.y)
+                    .attr("r", 5)
+                    .style("fill", "steelblue")
+                    .on("mouseover", showTooltip)
+                    .on("mouseout", hideTooltip),
+                update => update,
+                exit => exit.remove()
+            );
     });
 });

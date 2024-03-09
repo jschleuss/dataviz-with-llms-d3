@@ -1,27 +1,19 @@
-#scatterplot {
+#chart {
     position: relative;
-    width: 600px;
-    height: 400px;
+    width: 800px;
+    height: 600px;
 }
 
 .tooltip {
     position: absolute;
     text-align: center;
-    padding: 8px;
-    font: 12px sans-serif;
+    width: 200px;
+    height: auto;
+    padding: 10px;
     background: lightsteelblue;
     border: 0px;
     border-radius: 8px;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.5s;
-}
-
-#search-wrapper {
-    margin-bottom: 10px;
-}
-
-#search-box {
-    width: 200px;
-    height: 20px;
+    transition: opacity 0.3s;
 }
